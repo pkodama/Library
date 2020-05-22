@@ -29,7 +29,7 @@ struct SplayTree{
         int size;
         int value;
 
-        SplayNode(){
+        SplayNode(int value=0) : value(value){
             left=nullptr;
             right=nullptr;
             parent=nullptr;
@@ -89,6 +89,8 @@ struct SplayTree{
         }
     };
 
+    vector<SplayNode>pool;
+    SplayTree(int sz) : pool(sz){}
 
     SplayNode *get(int ind,SplayNode *root){
         SplayNode *now=root;
@@ -104,6 +106,48 @@ struct SplayTree{
                 ind=ind-lsize-1;
             }
         }
+    }
+
+    SplayNode *merge(SplayNode *lroot,SplayNode* rroot){
+        if(!rroot)return lroot;
+        if(!lroot)return rroot;
+        lroot=get(lroot->size-1,lroot);
+        lroot->right=rroot;
+        rroot->parent=lroot;
+        lroot->update();
+        return lroot;
+    }
+
+    pair<SplayNode*,SplayNode*> split(int left_cnt,SplayNode *root){
+        if(left_cnt==0)return {nullptr,root};
+        if(left_cnt==root->size)return {root,nullptr};
+        root=get(left_cnt,root);
+        SplayNode *lroot,*rroot;
+        lroot=root->left;
+        rroot=root;
+        rroot->left=nullptr;
+        lroot->parent=nullptr;
+        rroot->update();
+        return {lroot,rroot};
+    }
+
+    SplayNode *insert(int ind,SplayNode* node,SplayNode *root){
+        auto trees = split(ind,root);
+        SplayNode *lroot=trees.first;
+        SplayNode *rroot=trees.second;
+        return merge(merge(lroot,node),rroot);
+    }
+
+    pair<SplayNode*,SplayNode*> erase(int ind,SplayNode *root){
+        root=get(ind,root);
+        SplayNode *lroot=root->left;
+        SplayNode *rroot=root->right;
+        if(lroot)lroot->parent=nullptr;
+        if(rroot)rroot->parent=nullptr;
+        root->left=nullptr;
+        root->right=nullptr;
+        root->update();
+        return {merge(lroot,rroot),root};
     }
 };
 
